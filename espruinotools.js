@@ -2,21 +2,21 @@
 
 const { Command } = require('commander');
 const fontconverter = require("./fontconverter");
-const imageConverter = require("./imageconverter");
+const imageconverter = require("./imageconverter");
 
 
-function rotatePng( png, pngjs ){
+function transformPng( png, pngjs ){
   
   const rotated = new pngjs({
     width: png.height,
     height: png.width
   });
 
-  // Rotate the image by 90 degrees clockwise
+  // Rotate the image by 90 degrees clockwise & flip vertically
   for (let y = 0; y < png.height; y++) {
     for (let x = 0; x < png.width; x++) {
       const oldIdx = (png.width * y + x) << 2;
-      const newX = png.height - 1 - y;
+      const newX = y;
       const newY = x;
       const newIdx = (rotated.width * newY + newX) << 2;
 
@@ -36,21 +36,27 @@ function variableWidthPngFont( fontInfo ){
   var pngjs = require("pngjs").PNG;
   var png = pngjs.sync.read(require("fs").readFileSync(fontInfo.fn));
   
-  // espruino font bitmaps are rotated relative to PNG
+  // espruino font bitmaps are rotated & flipped vertically relative to PNG
   if( png.width > png.height ){
-    // assume PNG is wide and hasn't been rotated yet
-    png = rotatePng( png, pngjs );    
+    // assume PNG is wide and hasn't been flipped yet
+    png = transformPng( png, pngjs );    
   }
-
-  var imageString = imageConverter.RGBAtoString( png.data, {
+  
+  var imageString = imageconverter.RGBAtoString( png.data, {
     tranparent: false,
+    inverted: true,
     width: png.width,
     height: png.height,
     mode: "1bit",
-    output: "string"
+    output: "object"
   });
-  
-  let charMin = 46;
+  // we're doing this weird regex parsing of the object contained in
+  // imageString because it's the only output mode that produces a buffer that
+  // converts properly into a font (shrug)
+  let rx = new RegExp('buffer : ([^)]+)');
+  imageString = imageString.match( rx )[1] + ")";
+
+  let charMin = fontInfo.range[0].min;
 
   return `Graphics.prototype.setFont${fontInfo.name} = function() {
     return this.setFontCustom(
