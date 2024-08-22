@@ -113,6 +113,8 @@ function Font(info) {
   this.mapHeight = info.mapHeight||16;
   this.mapOffsetX = 0|info.mapOffsetX;
   this.mapOffsetY = 0|info.mapOffsetY;
+
+  this.croppedHeight = 0|info.croppedHeight;
 }
 
 /*
@@ -147,6 +149,7 @@ Font.prototype.generateGlyphs = function(getCharPixel) {
 
 // Is the given char code (int) in a range?
 Font.prototype.isChInRange = function(ch) {
+  if(!this.range.some) return ch>=this.range.min && ch<=this.range.max;
   return this.range.some(range => ch>=range.min && ch<=range.max);
 };
 
@@ -377,6 +380,7 @@ function loadBDF(fontInfo) {
       FONTNAME += "// "+line.substr(4).trim();
     if (line.startsWith("FONTBOUNDINGBOX")) {
       fontBoundingBox = line.split(" ").slice(1).map(x=>parseInt(x));
+      if (fontInfo.croppedHeight) fontBoundingBox[1] = fontInfo.croppedHeight;
       fontInfo.fmWidth = fontBoundingBox[0];
       fontInfo.height = fontInfo.fmHeight = fontBoundingBox[1] - fontBoundingBox[3];
     }
@@ -518,7 +522,7 @@ Font.prototype.getJS = function(options) {
   var charCodes = this.glyphs.map(g=>g.ch).filter(c=>c!==undefined).sort((a,b)=>a-b);
   var charMin = charCodes[0];
   var charMax = charCodes[charCodes.length-1];
-  console.log(`Outputting char range ${charMin}..${charMax}`);
+  // console.debug(`Outputting char range ${charMin}..${charMax}`);
   // stats
   var minY = this.height;
   var maxY = 0;

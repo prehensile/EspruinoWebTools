@@ -1,0 +1,19 @@
+{
+  "name": "espruinowebtools",
+  "version": "1.0.0",
+  "description": "EspruinoWebTools ================",
+  "main": "espruinotools.js",
+  "directories": {
+    "example": "examples"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "btoa": "^1.2.1",
+    "commander": "^12.1.0",
+    "pngjs": "^7.0.0"
+  }
+}
